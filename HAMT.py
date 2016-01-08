@@ -370,11 +370,3 @@ except KeyError:
 	print "deleted"
 h['foo'] = 'bar'
 h.dump()
-#property based testing framework
-#post-insert portperties
-#haskell -  quickCheck
-#transaction batch, fsync check if written to disk
-#tree structure assertions: dictionaries of dictionaries or tree
-#deletion (data for node), and rewriting, prepare to write
-#failure if computer crashes during insertion, how, and prevention
-#AFTER REPLAY LOG LOAD, ReadFreelist load tree function, INTO DATA BINARY TREE
