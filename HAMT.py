@@ -35,7 +35,7 @@ class HAMT:
 			self.logWrite(0,numberToBytes(self.file.tell()))
 			self.logWrite(8,numberToBytes(0))
 			self.logFlush()
-			pos = self.file.tell()
+			pos = self.file.tell
 			self.file.seek(0)
 			self.file.write(numberToBytes(pos))
 			self.file.write(numberToBytes(0))
@@ -317,7 +317,6 @@ class DeletedFile():
 		result = self.blocksBySize.findNext(size)
 		if not result:
 			return None
-		#import pdb;pdb.set_trace()
 		foundSize,positions = result
 		pos = positions.pop()
 		if len(positions) == 0:
@@ -328,7 +327,6 @@ class DeletedFile():
 
 class DeletedFileEntry():
 	def __init__(self,pos,size,index): 
-		'''postion = position in main file, size = entry, index = position in deleted file in bytes'''
 		self.pos = pos
 		self.size = size
 		self.index = index
@@ -353,20 +351,3 @@ if os.path.exists("WALHAMTfile"):
 	os.unlink("WALHAMTfile")
 if os.path.exists("DelHAMTfile"):
 	os.unlink("DelHAMTfile")
-h = HAMT("HAMTfile")
-h['hello'] = 'a'
-h['607'] = 'b'
-h.dump()
-print h['hello']
-print h['607']
-del h['hello']
-try:
-	print h['hello']
-except KeyError:
-	print "good"
-try:
-	del h['hello']
-except KeyError:
-	print "deleted"
-h['foo'] = 'bar'
-h.dump()
