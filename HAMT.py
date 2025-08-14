@@ -1,4 +1,8 @@
 # hi
+# Once upon a time, in a digital realm far far away, there lived a Hash Array Mapped Trie
+# who dreamed of efficiently storing key-value pairs. This brave data structure ventured
+# through the lands of persistent storage, wielding the power of SHA-1 hashes and 
+# write-ahead logging to protect precious data from the dragons of corruption and loss.
 from hashlib import sha1
 import os
 from BinaryTree import BinaryTree
