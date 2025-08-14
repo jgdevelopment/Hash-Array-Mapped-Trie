@@ -35,7 +35,7 @@ class HAMT:
 			self.logWrite(0,numberToBytes(self.file.tell()))
 			self.logWrite(8,numberToBytes(0))
 			self.logFlush()
-			pos = self.file.tell
+			pos = self.file.tell()
 			self.file.seek(0)
 			self.file.write(numberToBytes(pos))
 			self.file.write(numberToBytes(0))
@@ -92,19 +92,19 @@ class HAMT:
 				length = bytesToNumber(self.WALfile.read(8))
 				if length == 0:
 					return
-				data = bytesToNumber(self.WALfile.read(length))
-				pending.append((postion,data))
-			for positon,data in pending:
+				data = self.WALfile.read(length)
+				pending.append((position, data))
+			for position, data in pending:
 				if position > DeletedMarker:
-					position-=DeletedMarker
+					position -= DeletedMarker
 					self.delFile.file.seek(position)
 					self.delFile.file.write(data)
 				else:
 					self.file.seek(position)
 					self.file.write(data)
 
-	def logWrite(self,positon,data):
-		self.WALfile.write(numberToBytes(positon))
+	def logWrite(self, position, data):
+		self.WALfile.write(numberToBytes(position))
 		self.WALfile.write(numberToBytes(len(data)))
 		self.WALfile.write(data)
 
@@ -280,8 +280,8 @@ class DeletedFile():
 			index+=1
 
 	def addDeletedBlockToTrees(self,numPos,numSize):
-		self.file.seek(os.SEEK_END)
-		index = self.file.tell()
+                self.file.seek(0, os.SEEK_END)
+                index = self.file.tell()
 		entry = DeletedFileEntry(numPos,numSize,index)
 		self.blocksByPosition.insert(numPos,entry)
 		self.blocksByIndex[index] = entry
@@ -293,25 +293,25 @@ class DeletedFile():
 		if index>self.maxIndex:
 			self.maxIndex = index
 
-	def recoverBlock(self,entry):
-		logWrite(8,numberToBytes(maxIndex)*16)
-		if self.maxIndex == 0:
-			self.maxIndex = -1
-		else:
-			replacement = self.blocksByIndex[maxIndex]
-		del blocksByIndex[maxIndex]
-		replacement.index = entry.index 
-		maxIndex -=1
-		self.file.seek(entry.index)
-		self.file.write(replacement.positon)
-		self.file.write(replacement.size)
-		self.blocksByIndex[entry.index] = replacement
-		self.blocksByPosition.remove(entry.position)
-		positions = self.blocksBySize.find(entry.size)
-		pos = positions.pop()
-		if len(positions) == 0:
-			self.blocksBySize.remove(entry.size) 
-		return pos
+        def recoverBlock(self, entry):
+                self.logWrite(8, numberToBytes(self.maxIndex * 16))
+                if self.maxIndex == 0:
+                        self.maxIndex = -1
+                else:
+                        replacement = self.blocksByIndex[self.maxIndex]
+                del self.blocksByIndex[self.maxIndex]
+                replacement.index = entry.index
+                self.maxIndex -= 1
+                self.file.seek(entry.index)
+                self.file.write(numberToBytes(replacement.pos))
+                self.file.write(numberToBytes(replacement.size))
+                self.blocksByIndex[entry.index] = replacement
+                self.blocksByPosition.remove(entry.position)
+                positions = self.blocksBySize.find(entry.size)
+                pos = positions.pop()
+                if len(positions) == 0:
+                        self.blocksBySize.remove(entry.size)
+                return pos
 
 	def findDeletedBlockBySize(self,size):
 		result = self.blocksBySize.findNext(size)
