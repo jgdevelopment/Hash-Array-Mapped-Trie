@@ -17,7 +17,7 @@ class BinaryTree(object):
 		if self.root:
 			self.root.printOut()
 		else:
-			print "empty"
+			print("empty")
 	def findNext(self, needle):
 		if self.root:
 			return self.root.findNext(needle)
@@ -30,9 +30,27 @@ class BinaryTree(object):
 			return None	
 	def remove(self, needle):
 		if self.root:
-			self.root.remove(None,needle)
 			if self.root.key == needle:
-				self.root = self.root.right
+				# Handle root removal specially
+				if self.root.right:
+					# Find leftmost node in right subtree
+					current = self.root.right
+					parent = None
+					while current.left:
+						parent = current
+						current = current.left
+					# Replace root with leftmost node
+					if parent:
+						parent.left = current.right
+					else:
+						self.root.right = current.right
+					current.left = self.root.left
+					current.right = self.root.right
+					self.root = current
+				else:
+					self.root = self.root.left
+			else:
+				self.root.remove(None, needle)
 		else:
 			return None
 	def check(self):
@@ -110,10 +128,10 @@ class Node(object):
 			else:
 				return self.key, self.value
 	def printOut(self, depth = 0, prefix=''):
-		print ' '*(depth *2),
-		print prefix, 
-		print self.value,
-		print self.key
+		print(' '*(depth *2), end='')
+		print(prefix, end=' ') 
+		print(self.value, end=' ')
+		print(self.key)
 		if self.left:
 			self.left.printOut(depth+1,"Left: ")
 		if self.right:
@@ -168,7 +186,7 @@ tree.printOut()
 for i,number in enumerate(numbers):
  	tree.remove(number)
  	tree.check()
-print "items removed"
+print("items removed")
 tree.printOut()
 ####
 # for i,number in enumerate(numbers):
