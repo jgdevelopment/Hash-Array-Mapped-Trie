@@ -210,7 +210,7 @@ class HAMT:
 			return self.createNewLeaf(fileKey,key,value)
 		self.file.seek(index,0)
 		nodeType = self.file.read(1)
-		if nodeType=='L':
+		if nodeType == b'L':
 			oldHash = self.file.read(20)
 			oldLeafPosition = index
 			newLeafPosition = self.createNewLeaf(fileKey,key,value)
@@ -218,15 +218,15 @@ class HAMT:
 				return newLeafPosition
 			return self.insert(oldHash[fileKeyByte:],oldLeafPosition,
 							   fileKey[fileKeyByte:],newLeafPosition)		
-		if nodeType=='I':
+		if nodeType == b'I':
 			newPosition = self.findAndInsert(
 				fileKey,
 				fileKeyByte+1,
-				self.indexFromNode(index,ord(fileKey[fileKeyByte])),
+				self.indexFromNode(index,fileKey[fileKeyByte] if isinstance(fileKey[fileKeyByte], int) else ord(fileKey[fileKeyByte])),
 				key,
 				value)
 			if newPosition:
-				position = index+1+8*ord(fileKey[fileKeyByte])
+				position = index+1+8*fileKey[fileKeyByte] if isinstance(fileKey[fileKeyByte], int) else ord(fileKey[fileKeyByte])
 				self.logWrite(position,numberToBytes(newPosition))
 				self.logFlush()
 				self.file.seek(position,0)			
@@ -291,11 +291,11 @@ class HAMT:
 			newIndex = self.insert(oldHash[1:],oldPosition,
 					   newHash[1:],newPosition)
 			positions = [EmptyIndex for i in range(256)]
-			positions[ord(oldHash[0])] = newIndex
+			positions[oldHash[0] if isinstance(oldHash[0], int) else ord(oldHash[0])] = newIndex
 		else:
 			positions = [EmptyIndex for i in range(256)]
-			positions[ord(oldHash[0])] = oldPosition
-			positions[ord(newHash[0])] = newPosition
+			positions[oldHash[0] if isinstance(oldHash[0], int) else ord(oldHash[0])] = oldPosition
+			positions[newHash[0] if isinstance(newHash[0], int) else ord(newHash[0])] = newPosition
 		return self.createInternal(positions)
 
 	def createNewLeaf(self,fileKey,key,value):
@@ -306,14 +306,14 @@ class HAMT:
 			position = self.file.tell()
 		else:
 			self.file.seek(position,os.SEEK_SET)
-		self.logWrite(position,'L')
+		self.logWrite(position, b'L')
 		self.logWrite(position+1,fileKey)
 		self.logWrite(position+21,numberToBytes(len(key)))
 		self.logWrite(position+29,numberToBytes(len(value)))
 		self.logWrite(position+37,key)
 		self.logWrite(position+37+len(key),value)
 		self.logFlush()
-		self.file.write('L')
+		self.file.write(b'L')
 		self.file.write(fileKey)
 		self.file.write(numberToBytes(len(key)))
 		self.file.write(numberToBytes(len(value)))
@@ -323,7 +323,7 @@ class HAMT:
 
 	def createInternal(self,positions=None):
 		position = self.file.tell()
-		self.logWrite(position,'I')
+		self.logWrite(position, b'I')
 		if positions:
 			for i in range(256):
 				self.logWrite(position+1+i*8,numberToBytes(positions[i]))
@@ -331,7 +331,7 @@ class HAMT:
 			for i in range(256): 
 				self.logWrite(position+1+i*8,numberToBytes(EmptyIndex))
 		self.logFlush()
-		self.file.write('I')
+		self.file.write(b'I')
 		if positions:
 			for i in range(256):
 				self.file.write(numberToBytes(positions[i]))
@@ -342,7 +342,7 @@ class HAMT:
 
 	def deletionSearch(self,fileKey,index):
 		nodeType = self.file.read(1)
-		if nodeType == 'L':
+		if nodeType == b'L':
 			if self.file.read(20) == fileKey:
 				keyLen = bytesToNumber(self.file.read(8))
 				valLen = bytesToNumber(self.file.read(8))
@@ -350,8 +350,8 @@ class HAMT:
 				length = headerLen+keyLen+valLen
 				self.delLogWrite(self.file.tell()-headerLen,length)
 				return length
-		if nodeType =='I':
-			position = self.file.tell()+ord(fileKey[index])*8
+		if nodeType == b'I':
+			position = self.file.tell()+fileKey[index] if isinstance(fileKey[index], int) else ord(fileKey[index])*8
 			self.file.seek(position)
 			childPosition = bytesToNumber(self.file.read(8))
 			if childPosition ==EmptyIndex:
@@ -372,12 +372,12 @@ class HAMT:
 			return None
 		self.file.seek(index,0)
 		nodeType = self.file.read(1)
-		if nodeType=='L':
+		if nodeType == b'L':
 			result = self.readLeaf(index+1,key)
 			if result:
 				return result[2]
-		if nodeType=='I':
-			return self.lookup(key[1:],self.indexFromNode(index,ord(key[0])))
+		if nodeType == b'I':
+			return self.lookup(key[1:],self.indexFromNode(index,key[0] if isinstance(key[0], int) else ord(key[0])))
 		return None
 
 	def readLeaf(self,index,keyHash):
@@ -400,10 +400,10 @@ class HAMT:
 			lengthOfFile = self.file.read(8)
 			lengthOfDelFIle = self.file.read(8)
 		nodeType = self.file.read(1) 
-		if nodeType == 'L':
+		if nodeType == b'L':
 			keyHash,key,value = self.readLeaf(position+1,None)
 			print("  "*treeDepth+'L: %s-->%s'%(key,value))
-		elif nodeType == 'I':
+		elif nodeType == b'I':
 			for i in range(256):
 				index = self.file.read(8)
 				newPosition = bytesToNumber(index)
